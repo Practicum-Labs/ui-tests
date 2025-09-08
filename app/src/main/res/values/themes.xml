@@ -1,0 +1,26 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.PlaylistMaker" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+
+        <item name="colorPrimary">@color/white</item>
+        <item name="colorPrimaryVariant">@color/blue</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:textColorPrimary">@color/YP_Black</item>
+        <item name="android:textColorSecondary">@color/white</item>
+        <item name="colorOnSurface">@color/YP_Black</item>
+        <item name="colorOnSurfaceVariant">@color/YP_Black</item>
+        <item name="colorSecondary">@color/green_active</item>
+        <item name="colorSurface">@color/green_active</item>
+        <item name="colorPrimaryContainer">@color/YP_Black</item>
+        <item name="colorOnPrimaryContainer">@color/white</item>
+        <item name="android:textColor">@color/green_active</item>
+
+
+
+
+
+    </style>
+
+    <style name="Theme.PlaylistMaker" parent="Base.Theme.PlaylistMaker" />
+
+</resources>
