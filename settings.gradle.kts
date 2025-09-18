@@ -21,4 +21,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "Ui tests for Practicum"
 include(":app")
-include(":testing-library")

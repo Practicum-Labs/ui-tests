@@ -16,6 +16,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments["clearPackageData"] = "true"
+        testInstrumentationRunnerArguments["activityClass"] = project.findProperty("activityClass") as? String ?: ""
     }
 
     buildTypes {
@@ -49,8 +51,9 @@ dependencies {
 
     // Testing
     testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation("androidx.test.ext:junit:1.3.0")
+    androidTestImplementation("androidx.test.espresso:espresso-intents:3.7.0")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
 
     // UI & Images
     implementation(libs.compose.icons.core)
@@ -61,4 +64,5 @@ dependencies {
     // Network
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
+
 }
