@@ -32,6 +32,9 @@ import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.espresso.intent.matcher.IntentMatchers.toPackage
+import androidx.test.uiautomator.UiDevice
+import org.junit.rules.TestRule
+import org.junit.runners.model.Statement
 
 @RunWith(AndroidJUnit4::class)
 class UiTestsSprint8 {
@@ -47,6 +50,9 @@ class UiTestsSprint8 {
     @get:Rule
     val activityRule = ActivityScenarioRule(activityClass)
 
+    @get:Rule
+    val themeRule = ThemeRule()
+
     // Set up and tear down methods for Intents
     @Before
     fun setUp() {
@@ -60,8 +66,19 @@ class UiTestsSprint8 {
 
     @SuppressLint("CheckResult")
     @Test
-    fun `Проверка_основного_цвета_фона`() {
+    @RequiresUiMode(UiMode.LIGHT)
+    fun `Проверка_основного_цвета_фона_Light_тема`() {
         val expectedColor = Color.parseColor("#3772E7") // Or your specific color
+
+        onView(withId(android.R.id.content))
+            .check(matches(hasChildWithBackgroundColor(expectedColor)))
+    }
+
+    @SuppressLint("CheckResult")
+    @Test
+    @RequiresUiMode(UiMode.DARK)
+    fun `Проверка_основного_цвета_фона_Dark_тема`() {
+        val expectedColor = Color.parseColor("#1A1B22") // Or your specific color
 
         onView(withId(android.R.id.content))
             .check(matches(hasChildWithBackgroundColor(expectedColor)))
@@ -208,26 +225,22 @@ class UiTestsSprint8 {
     @Test
     fun `Проверка_нижнего_отступа_кнопки_НАСТРОЙКИ`() {
         val buttonText = "Настройки"
-        val marginDp = 28 // Example minimum required margin
+        val marginDp = 24
 
-        // Rect to store the button's bounds
         val buttonBounds = Rect()
+        val contentBounds = Rect() // <-- Добавляем Rect для content
 
-        // Get the button's coordinates on the screen
         onView(withTextCaseInsensitive(buttonText)).perform(GetViewBoundsAction(buttonBounds))
 
-        // Get the screen dimensions to calculate the bottom margin
+        onView(withTextCaseInsensitive(buttonText)).perform(GetParentViewBoundsAction(contentBounds))
+
         val displayMetrics = InstrumentationRegistry.getInstrumentation().targetContext.resources.displayMetrics
-        val screenHeightPx = displayMetrics.heightPixels
         val screenDensity = displayMetrics.density
 
-        // Calculate the minimum margin in pixels
         val marginPx = (marginDp * screenDensity).toInt()
 
-        // Calculate the actual space from the bottom of the button to the bottom of the screen
-        val bottomMarginPx = screenHeightPx - buttonBounds.bottom
+        val bottomMarginPx = contentBounds.bottom - buttonBounds.bottom
 
-        // Assert that the bottom margin is greater than or equal to the minimum
         assertTrue(
             "Нижний отступ кнопки \"$buttonText\" некорректный. " +
                     "Ожидается: $marginDp dp. " +
@@ -500,6 +513,67 @@ class GetViewBoundsAction(private val outRect: Rect) : ViewAction {
     override fun perform(uiController: UiController?, view: View?) {
         Log.e("UiTestsSprint8", "GetViewBoundsAction.")
         view?.getGlobalVisibleRect(outRect)
+        Log.e("UiTestsSprint8", "outRect.bottom ${outRect.bottom}")
     }
+}
+
+class GetParentViewBoundsAction(private val outRect: Rect) : ViewAction {
+
+    override fun getConstraints(): Matcher<View> {
+        return Matchers.allOf(ViewMatchers.isDisplayed(), Matchers.instanceOf(View::class.java))
+    }
+
+    override fun getDescription(): String {
+        return "getting parent view bounds"
+    }
+
+    override fun perform(uiController: UiController?, view: View?) {
+        val parent = view?.parent
+        if (parent is View) {
+            parent.getGlobalVisibleRect(outRect)
+        } else {
+            // На случай, если родитель не View (маловероятно для ViewGroup)
+            // Можно записать ошибку или использовать rootView
+            Log.e("GetParentViewBounds", "Parent is not a View or is null")
+        }
+    }
+}
+
+enum class UiMode(val shellCommand: String) {
+    LIGHT("cmd uimode night no"),
+    DARK("cmd uimode night yes")
+}
+
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.FUNCTION)
+annotation class RequiresUiMode(val mode: UiMode)
+
+class ThemeRule : TestRule {
+    override fun apply(base: Statement, description: org.junit.runner.Description): Statement? {
+        return object : Statement() {
+            @Throws(Throwable::class)
+            override fun evaluate() {
+                // 1. Пытаемся прочитать нашу аннотацию у теста
+                val uiModeAnnotation = description.getAnnotation(RequiresUiMode::class.java)
+
+                if (uiModeAnnotation == null) {
+                    // 2. Если аннотации нет - просто запускаем тест как обычно
+                    base.evaluate()
+                } else {
+                    // 3. Если аннотация есть - переключаем тему!
+                    val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+                    val modeToSet = uiModeAnnotation.mode.shellCommand
+
+                    try {
+                        uiDevice.executeShellCommand(modeToSet) // Устанавливаем нужный режим
+                        base.evaluate() // Запускаем тест
+                    } finally {
+                        uiDevice.executeShellCommand("cmd uimode night auto") // Всегда сбрасываем
+                    }
+                }
+            }
+        }
+    }
+
 }
 

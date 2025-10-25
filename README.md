@@ -14,7 +14,8 @@
 		...
 	    androidTestImplementation("androidx.test.ext:junit:1.3.0")
 	    androidTestImplementation("androidx.test.espresso:espresso-intents:3.7.0")
-	    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")  
+	    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
+        androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
 	}
 
 ### **2\. Конфигурация Gradle**
